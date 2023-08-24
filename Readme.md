@@ -1,8 +1,9 @@
 このアプリはスペルのわからない英単語あるいは英文を素早くフォームに入力するためのものです。DeepLでいちいち翻訳して貼り付けての作業がおっくうになり開発しました。
 
  
-## 必要条件
-* AzureTranslatorAPI または OpenAIAPI
+## 必要
+* DeepLAPI または OpenAIAPI または AzureTranslatorAPI
+  DeepLAPIは毎月50万文字まで無料
   
 ## インストール
 * リリースから最新版のソースコードをインストールしてください。
@@ -29,9 +30,9 @@
 This app is designed to help you quickly enter unspelled English words or sentences into a form. DeepL was developed because it was tedious to translate and paste every time.
 
  
-## Requirements
-* AzureTranslatorAPI or OpenAIAPI
-  
+## Required
+* DeepLAPI or OpenAIAPI or AzureTranslatorAPI
+  DeepLAPI is free up to 500,000 letters per month
 ## Installation
 * Install the latest source code from the release.
 * You may get an error from your OS or browser during installation, but this is not a problem, so please ignore it and proceed.
