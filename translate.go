@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"encoding/base64"
 	"strings"
 	"unicode/utf8"
@@ -129,6 +130,56 @@ func translateOpenAI(text string, client *http.Client, apiKey string) (string, e
 	return translatedText, nil
 }
 
+func translateDeepl(text string, client *http.Client, apiKey string) (string, error) {
+	endpoint := "https://api-free.deepl.com/v2/translate"
+
+	headers := map[string]string{
+		"Authorization": "DeepL-Auth-Key " + apiKey,
+		"Content-Type":  "application/x-www-form-urlencoded",
+	}
+
+	data := url.Values{}
+	data.Set("text", text)
+	data.Set("target_lang", "EN") // 目的言語を英語に設定
+	data.Set("source_lang", "JA") // 元の言語を日本語に設定
+
+	req, err := http.NewRequest("POST", endpoint, strings.NewReader(data.Encode()))
+	if err != nil {
+		log.Println("Error creating request")
+		return "", err
+	}
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error making request")
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+
+	type DeepLResponse struct {
+		Translations []struct {
+			DetectedSourceLanguage string `json:"detected_source_language"`
+			Text                   string `json:"text"`
+		} `json:"translations"`
+	}
+
+	var result DeepLResponse
+	err = json.Unmarshal(respBody, &result)
+	if err != nil {
+		log.Println("Error decoding response")
+		return "", err
+	}
+	translatedText := result.Translations[0].Text
+
+	return translatedText, nil
+}
+
 func main() {
 	client := &http.Client{}
 
@@ -164,11 +215,14 @@ func main() {
 		translatedText, err = translateAzure(text, client, string(decryptedAPIKey), string(decryptedEndpoint), string(decryptedLocation))
 	} else if apiChoice == "OpenAI" {
 		apiKey := cfg.Section("OpenAI").Key("api_key").String()
-
-		// Decrypt API key
 		decryptedAPIKey, _ := base64.StdEncoding.DecodeString(apiKey)
-
 		translatedText, err = translateOpenAI(text, client, string(decryptedAPIKey))
+
+	} else if apiChoice == "DeepL" {
+		apiKey := cfg.Section("DeepL").Key("api_key").String()
+		decryptedAPIKey, _ := base64.StdEncoding.DecodeString(apiKey)
+		translatedText, err = translateDeepl(text, client, string(decryptedAPIKey))
+	
 	} else {
 		log.Fatal("Invalid API choice:", apiChoice)
 	}

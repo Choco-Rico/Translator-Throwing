@@ -11,16 +11,23 @@ class APIKeyManager(tk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-        self.api_choice = tk.StringVar(value="Azure")
-
-        azure_button = tk.Radiobutton(self, text="Azure", variable=self.api_choice, value="Azure")
+        current_api_choice = self.get_current_api_choice()
+        self.api_choice = tk.StringVar(value=current_api_choice)
+        deepl_button = tk.Radiobutton(self, text="DeepL", variable=self.api_choice, value="DeepL")
         openai_button = tk.Radiobutton(self, text="OpenAI", variable=self.api_choice, value="OpenAI")
+        azure_button = tk.Radiobutton(self, text="Azure", variable=self.api_choice, value="Azure")
 
+        deepl_button.pack()
         openai_button.pack()
         azure_button.pack()
 
         submit_button = tk.Button(self, text="OK", command=self.submit_choice)
         submit_button.pack()
+
+    def get_current_api_choice(self):
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        return config['API']['choice'] if config.has_option('API', 'choice') else "DeepL"
 
     def submit_choice(self):
         self.service_name = self.api_choice.get()
