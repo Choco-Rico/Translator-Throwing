@@ -8,6 +8,7 @@ import win32event
 import win32api
 import threading
 import winerror
+import logging
 import sys
 import json
 from PIL import Image
@@ -23,6 +24,8 @@ if win32api.GetLastError() == winerror.ERROR_ALREADY_EXISTS:
 count = 0
 timestamp = 0
 shutdown_event = threading.Event()  # シャットダウンを検知するためのイベント
+
+logging.basicConfig(filename='error.log', level=logging.ERROR)
 
 def monitor_shutdown():
     def on_shutdown_handler(hwnd, msg, wparam, lparam):
@@ -56,6 +59,7 @@ def on_hotkey():
         count = (count + 1) % 2
     except Exception as e:
         print("An error occurred:", e)
+        logging.error(f"An error occurred: {e}")  # 新たに追加：エラーログに保存
         reset_and_restart()  # エラーが発生した場合のリセット処理
 
 def load_hotkey():
@@ -88,7 +92,7 @@ keyboard.add_hotkey(hotkey, on_hotkey)
 
 def reset_and_restart():
     print("An error occurred. Restarting the application...")
-
+    logging.info("An error occurred. Restarting the application...")
     # 現在のPythonスクリプトを再起動
     os.execl(sys.executable, sys.executable, *sys.argv)
 
@@ -114,5 +118,7 @@ try:
             update_hotkey()
             last_modified_time = current_modified_time
         time.sleep(1)
-except KeyboardInterrupt:
-    print("Task interrupted")
+except Exception as e:  # 新たに追加：全体のエラーハンドリング
+    print(f"An unexpected error occurred: {e}")
+    logging.error(f"An unexpected error occurred: {e}")  # エラーログに保存
+    reset_and_restart()  # アプリを再起動
