@@ -8,12 +8,17 @@ import win32event
 import win32api
 import threading
 import winerror
-import logging
 import sys
 import json
 from PIL import Image
 import pystray
 from pystray import MenuItem as item
+
+def reset_and_restart():
+    print("An error occurred. Restarting the application...")
+    if mutex is not None:  # Mutexが存在する場合
+        win32api.CloseHandle(mutex) 
+    os.execl(sys.executable, sys.executable, *sys.argv)
 
 try:
     mutex = win32event.CreateMutex(None, 1, 'Translator_SingleInstanceMutex')
@@ -25,8 +30,6 @@ try:
     count = 0
     timestamp = 0
     shutdown_event = threading.Event()  # シャットダウンを検知するためのイベント
-
-    logging.basicConfig(filename='error.log', level=logging.ERROR)
 
     def monitor_shutdown():
         def on_shutdown_handler(hwnd, msg, wparam, lparam):
@@ -60,7 +63,6 @@ try:
             count = (count + 1) % 2
         except Exception as e:
             print("An error occurred:", e)
-            logging.error(f"An error occurred: {e}")  # 新たに追加：エラーログに保存
             reset_and_restart()  # エラーが発生した場合のリセット処理
 
     def load_hotkey():
@@ -91,12 +93,6 @@ try:
     last_modified_time = os.path.getmtime(config_file_path)
     keyboard.add_hotkey(hotkey, on_hotkey)
 
-    def reset_and_restart():
-        print("An error occurred. Restarting the application...")
-        logging.info("An error occurred. Restarting the application...")
-        # 現在のPythonスクリプトを再起動
-        os.execl(sys.executable, sys.executable, *sys.argv)
-
     def create_icon(icon_path):
         image = Image.open(icon_path)
         icon = pystray.Icon("name", image, "Translator-Trowing", menu=pystray.Menu(item('Quit', exit_app)))
@@ -121,7 +117,6 @@ try:
             time.sleep(1)
     except Exception as e:  # 新たに追加：全体のエラーハンドリング
         print(f"An unexpected error occurred: {e}")
-        logging.error(f"An unexpected error occurred: {e}")  # エラーログに保存
         reset_and_restart()  # アプリを再起動
 except:
-    os.execl(sys.executable, sys.executable, *sys.argv)
+    reset_and_restart()
