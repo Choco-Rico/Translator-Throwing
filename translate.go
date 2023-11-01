@@ -222,7 +222,7 @@ func main() {
 		apiKey := cfg.Section("DeepL").Key("api_key").String()
 		decryptedAPIKey, _ := base64.StdEncoding.DecodeString(apiKey)
 		translatedText, err = translateDeepl(text, client, string(decryptedAPIKey))
-	
+
 	} else {
 		log.Fatal("Invalid API choice:", apiChoice)
 	}

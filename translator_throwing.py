@@ -15,16 +15,16 @@ import pystray
 from pystray import MenuItem as item
 
 def reset_and_restart():
-    print("An error occurred. Restarting the application...")
+    print("エラーが発生しました。アプリケーションを再起動します...")
     if mutex is not None:  # Mutexが存在する場合
-        win32api.CloseHandle(mutex) 
+        win32api.CloseHandle(mutex)
     os.execl(sys.executable, sys.executable, *sys.argv)
 
 try:
     mutex = win32event.CreateMutex(None, 1, 'Translator_SingleInstanceMutex')
     if win32api.GetLastError() == winerror.ERROR_ALREADY_EXISTS:
         mutex = None
-        print("Another instance is already running. Exiting.")
+        print("既に別のインスタンスが実行中です。終了します。")
         sys.exit(0)
 
     count = 0
@@ -34,7 +34,7 @@ try:
     def monitor_shutdown():
         def on_shutdown_handler(hwnd, msg, wparam, lparam):
             if msg == win32con.WM_QUERYENDSESSION:
-                print("Shutting down or restarting...")
+                print("シャットダウンまたは再起動中...")
                 shutdown_event.set()  # シャットダウンイベントを設定
                 return 0  # システムにシャットダウンを許可する
             return True
@@ -62,7 +62,7 @@ try:
 
             count = (count + 1) % 2
         except Exception as e:
-            print("An error occurred:", e)
+            print("エラーが発生しました:", e)
             reset_and_restart()  # エラーが発生した場合のリセット処理
 
     def load_hotkey():
@@ -72,7 +72,7 @@ try:
                 config = json.load(config_file)
                 return config["hotkey"]  # ホットキーを返す
         else:
-            print('Creating default config file')
+            print('デフォルトの設定ファイルを作成します')
             default_hotkey = "alt+C"
             config = {"hotkey": default_hotkey}
             with open(config_file_path, 'w') as config_file:
@@ -83,7 +83,7 @@ try:
         global hotkey
         new_hotkey = load_hotkey()
         if new_hotkey != hotkey:
-            print(f"Hotkey changed from {hotkey} to {new_hotkey}")
+            print(f"ホットキーが {hotkey} から {new_hotkey} に変更されました")
             keyboard.remove_hotkey(hotkey)
             hotkey = new_hotkey
             keyboard.add_hotkey(hotkey, on_hotkey)
@@ -115,8 +115,8 @@ try:
                 update_hotkey()
                 last_modified_time = current_modified_time
             time.sleep(1)
-    except Exception as e:  # 新たに追加：全体のエラーハンドリング
-        print(f"An unexpected error occurred: {e}")
-        reset_and_restart()  # アプリを再起動
+    except Exception as e:
+        print(f"予期しないエラーが発生しました: {e}")
+        reset_and_restart()
 except:
     reset_and_restart()
